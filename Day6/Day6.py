@@ -42,6 +42,7 @@ def partOne(inputPath):
 	print(f"{len(set(positions_visited))}")
 
 #In theory, this should work, given infinite time, however it's slow and bad lol
+#I think I had the right idea, just overcomplicated. Maybe this would make for a good starting point for a visualization
 def partTwo(inputPath):
 	grid, length, position, positions_visited = generateGrid(inputPath)
 	direction = 0
@@ -85,7 +86,43 @@ def partTwo(inputPath):
 					print(f"{item_at_next_position} {next_position}")
 	print(loopable_locations)
 
+#Credit to Jonathan Paulson for this solution that actually runs in a realistic amount of time
+#https://github.com/jonathanpaulson/AdventOfCode/blob/master/2024/6.py
+def simpler_part_two(inputPath):
+	file = open(inputPath).read().strip()
+	grid = file.split('\n')
+	Rows = len(grid)
+	Columns = len(grid[0])
+	for row in range(Rows):
+		for column in range(Columns):
+			if grid[row][column] == "^":
+				start_row, start_column = row, column
+
+	loopables = 0
+	for obstruction_row in range(Rows):
+		for obstruction_column in range(Columns):
+			row, column = start_row, start_column
+			direction = 0
+			Seen = set()
+			Seen_Positions = set()
+			while True:
+				if (row, column, direction) in Seen:
+					loopables+=1
+					break
+				Seen.add((row, column, direction))
+				Seen_Positions.add((row, column))
+				modRow, modCol = [(-1,0),(0,1),(1,0),(0,-1)][direction]
+				targetRow, targetCol = row + modRow, column + modCol
+				if not (0<=targetRow<Rows and 0<=targetCol<Columns):
+					break
+				if grid[targetRow][targetCol]=="#" or (obstruction_row == targetRow and obstruction_column == targetCol):
+					direction = (direction + 1) %4
+				else:
+					row = targetRow
+					column = targetCol
+	print(loopables)
+
 if __name__ == "__main__":
 	inputPath = sys.argv[1]
 	partOne(inputPath)
-	partTwo(inputPath)
+	simpler_part_two(inputPath)
