@@ -22,57 +22,35 @@ class TreeNode:
 
 def canReachTarget(numbers, target, useConcat = False):
 	root = TreeNode(numbers[0], None)
-	generateChildNodes(numbers[1:], root)
-	if traverse(root, target, useConcat):
-		return True
-	else:
-		return False
+	generateChildNodes(numbers[1:], root, target, useConcat)
+	return root.canReachTarget
 
-def traverse(node, target, useConcat):
-	if node is None:
-		return None
-	if node.value > target:
-		return None
-	if node.value == target and node.add is None and node.mult is None and (not useConcat or node.concat is None):
-		return node
-	else:
-		found_node = traverse(node.add, target, useConcat)
-		if found_node is None:
-			found_node = traverse(node.mult, target, useConcat)
-		if found_node is None and useConcat:
-			found_node = traverse(node.concat, target, useConcat)
-		return found_node
-
-def generateChildNodes(numbers, parent):
+def generateChildNodes(numbers, parent, target, useConcat):
 	parent.add = TreeNode(parent.value + numbers[0], parent)
-	if (len(numbers)) > 1:
-		generateChildNodes(numbers[1:], parent.add)
 	parent.mult = TreeNode(parent.value * numbers[0], parent)
+	if useConcat:
+		parent.concat = TreeNode(int(str(parent.value) + str(numbers[0])), parent)
 	if (len(numbers)) > 1:
-		generateChildNodes(numbers[1:], parent.mult)
-	parent.concat = TreeNode(int(str(parent.value) + str(numbers[0])), parent)
-	if (len(numbers)) > 1:
-		generateChildNodes(numbers[1:], parent.concat)
+		generateChildNodes(numbers[1:], parent.add, target, useConcat)
+		generateChildNodes(numbers[1:], parent.mult, target, useConcat)
+		if useConcat:
+			generateChildNodes(numbers[1:], parent.concat, target, useConcat)
+	elif parent.add.value == target or parent.mult.value == target or (useConcat and parent.concat.value == target):
+		reverse_node = parent
+		while reverse_node.parent is not None:
+			reverse_node = reverse_node.parent
+		reverse_node.canReachTarget = True
 
-def partOne(inputPath):
+def solve(inputPath, useConcat):
 	reachable_targets = []
 	with open(inputPath) as f:
 		for line in f.readlines():
 			split = [int(s) for s in re.findall("(\\d+)", line)]
-			if canReachTarget(split[1:], split[0]):
+			if canReachTarget(split[1:], split[0], useConcat):
 				reachable_targets.append(split[0])
-	print(f"{sum(reachable_targets)}")
-
-def partTwo(inputPath):
-	reachable_targets = []
-	with open(inputPath) as f:
-		for line in f.readlines():
-			split = [int(s) for s in re.findall("(\\d+)", line)]
-			if canReachTarget(split[1:], split[0], True):
-				reachable_targets.append(split[0])
-	print(f"{sum(reachable_targets)}")
+	return sum(reachable_targets)
 
 if __name__ == "__main__":
 	inputPath = sys.argv[1]
-	partOne(inputPath)
-	partTwo(inputPath)
+	print(f"Part One: {solve(inputPath, False)}")
+	print(f"Part Two: {solve(inputPath, True)}")
